@@ -1,0 +1,113 @@
+/*
+Graphviz - DOT language writing!
+$dot -Tsvg this.dot -o this.svg
+*/
+digraph Diagram {
+    //PROFILE [label = "Connecting WLAN", shape=none];
+    nodesep=0.1;
+    node [fontsize=10];
+    edge [fontsize=9];
+    subgraph clusterMain {
+        label = "Connecting Wireless-LAN Access Point";
+        subgraph N_Start {
+            node [shape=invtriangle];
+            Start;
+        }
+        subgraph N_End {
+            node [shape=triangle];
+            End;
+        }
+        subgraph Nodes {
+            subgraph N_Do {
+                node [shape=box];
+                ImproveYourWifiAntenna [URL="http://www.instructables.com/id/DIY-WIFI-Antenna-Reception-Booster/"];
+                DeauthAllClient [URL="http://www.aircrack-ng.org/doku.php?id=deauthentication"];
+            }
+            subgraph N_If {
+                node [shape=diamond];
+                HasAccessPointsAroundYou [URL="http://www.aircrack-ng.org/doku.php?id=airodump-ng"];
+                IsStealthESSID [URL="http://securitysynapse.blogspot.jp/2014/01/wireless-pentesting-on-cheap-kali-hiddenSSID.html"];
+                IsThereConnectedClient [URL="http://blackhat6969.blogspot.jp/2012/09/down-and-dirty-wifi-cracking-with.html"];
+                HasEncryption [URL="http://www.dummies.com/how-to/content/wireless-security-protocols-wep-wpa-and-wpa2.html"];
+                HasWebAuthentication [URL="http://www.slideshare.net/support_cyberoam/hotspot-authentication"];
+                IsWEP [URL="http://www.howtogeek.com/167783/htg-explains-the-difference-between-wep-wpa-and-wpa2-wireless-encryption-and-why-it-matters/"];
+            }
+        }
+        subgraph Flow {
+            Start -> HasAccessPointsAroundYou;
+            {HasAccessPointsAroundYou ImproveYourWifiAntenna} -> IsStealthESSID [label="I have."];
+            HasAccessPointsAroundYou -> ImproveYourWifiAntenna [label="Seems nothing."];
+            IsStealthESSID -> IsThereConnectedClient [label="I don't know ESSID"];
+            IsThereConnectedClient -> DeauthAllClient [label="Yes. Someone connects."];
+            IsThereConnectedClient -> IsThereConnectedClient [label="No."];
+            {IsStealthESSID DeauthAllClient } -> HasEncryption [label="I got ESSID from frames"];
+            HasEncryption -> HasWebAuthentication [label="No. It's OPN access."]
+            HasEncryption -> IsWEP [label="It has."];
+            IsWEP -> WEP [label="Yes. WEP."];
+            IsWEP -> WPA [label="No.WPA."];
+        }
+    }
+    subgraph clusterCommands {
+        label = "CommandsAndNotes";
+        subgraph Nt_Command {
+            node [shape=box];
+            HasAccessPointsAroundYouCommand [label="ifconfig wlan0 down;\niwconfig wlan0 mode mon || airmon-ng start wlan0;\nairodump-ng wlan0;\n"];
+            ImproveYourWifiAntennaCommand [label="iw reg set BO;\niwconfig wlan0 tx 30;\n#Add DIY Parabora."];
+            IsStealthESSIDCommand [label="airodump-ng -c [channel] --bssid [AP MAC] wlan0"]
+            DeauthAllClientCommand [label="aireplay-ng -0 0 -a [AP MAC] wlan0;\naireplay-ng -0 0 -a [AP MAC] -c [STA MAC] wlan0;"];
+        }
+        subgraph Nt_Flow {
+            edge [color=gray];
+            HasAccessPointsAroundYouCommand -> HasAccessPointsAroundYou;
+            ImproveYourWifiAntennaCommand -> ImproveYourWifiAntenna;
+            IsStealthESSIDCommand -> IsStealthESSID;
+            DeauthAllClientCommand -> DeauthAllClient;
+        }
+    }
+    subgraph clusterWEP {
+        label = "WEP";
+        compound = true;
+        subgraph Nodes_WEP {
+            node [shape=box]
+            WEP;
+        }
+        subgraph Flow_WEP {
+        }
+    }
+    subgraph clusterWPA {
+        label = "WPA";
+        compound = true;
+        subgraph Nodes_WPA {
+            node [shape=box]
+            WPA;
+        }
+        subgraph Flow_WPA {
+        }
+    }
+}
+        //subgraph clusterFlow {
+        /*
+        subgraph Flow {
+            IcapRequest -> IsREQMOD [label="ICAP Request From Proxy"];
+            {IsREQMOD -> IsRESPMOD [label="no"]} -> IsHTTP [label="yes"];
+
+            IsHTTP -> IsHTTPResponse [label="yes"];
+
+            IsHTTPResponse -> IsHTTPRequest [label="no"];
+            IsHTTPResponse -> HasCanariaCookie [label="yes"];
+            HasCanariaCookie -> SetCanariaCookie [label="no"];
+            HasCanariaCookie -> 204 [label="yes"];
+            SetCanariaCookie -> 200 [label="mod please"];
+
+            IsHTTPRequest -> CheckURL_ModSecurity_Canaria [label="yes"];
+            {CheckURL_ModSecurity_Canaria -> CheckBody_ModSecurity_Canaria [label="OK"]} -> 403 [label="XSS!"];
+            CheckBody_ModSecurity_Canaria -> 204 [label="OK"];
+
+            {IsRESPMOD IsHTTP IsHTTPRequest} -> 204 [label="Exception"];//OPTIONS, etc..
+            {rank=same; 200 204 403} -> IcapResponse [label="ICAP Response to Proxy"];//同じ階層に
+        }
+        //{edge[style=invis];
+            //{IcapRequest} -> {IcapResponse};
+        //}
+        */
+
