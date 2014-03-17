@@ -3,10 +3,61 @@ Graphviz - DOT language writing!
 $dot -Tsvg this.dot -o this.svg
 */
 digraph Diagram {
-    //PROFILE [label = "Connecting WLAN", shape=none];
+    //PROFILE [label = "written by SYA-KE", shape=none];
     nodesep=0.1;
     node [fontsize=10];
     edge [fontsize=9];
+    subgraph clusterOPN{
+        label = "OPN";
+        subgraph OPN_N_If {
+            node [shape=diamond]
+            NothingToDo;
+        }
+        subgraph OPN_Flow {
+        }
+    }
+    subgraph clusterWEP {
+        label = "WEP";
+        subgraph WEP_N_If {
+            node [shape=diamond]
+            HasClient_WEP [label="HasClient"];
+        }
+        subgraph WEP_Flow {
+        }
+    }
+    subgraph clusterWPA {
+        label = "WPA";
+        subgraph WPA_N_If {
+            node [shape=diamond]
+            IsTKIP;
+            IsPSK;
+        }
+        subgraph WPA_Flow {
+            IsTKIP -> HasAP_PSK [label="Yes."];
+            IsTKIP -> IsPSK [label="No."];
+            //IsTKIP -> KobeCrack [label="gain xor -> sniff and forge packets(do XOR each transaction)"]
+            IsPSK -> HasClient_PSK [label="Yes."];
+            IsPSK -> HasClient_EAP [label="NO."];
+        }
+        subgraph clusterPSK {
+            label = "PSK";
+            subgraph PSK_N_If {
+                HasClient_PSK [label="HasClient"];
+                HasAP_PSK [label="HasAP"];
+                HasAP_WPS_PSK [label="DoesAccessPointUseWPS"];
+            }
+            subgraph PSK_N_Flow {
+                HasAP_PSK -> HasAP_WPS_PSK [label="Yes"];
+                //HasAP_PSK -> HasClient_PSK [label="Yes"];
+                //HasClient_PSK -> HasAP_PSK [label="Yes."];
+                //HasClient_PSK -> HasAP_PSK [label="No."]
+            }
+        }
+        subgraph clusterEAP {
+            label = "EAP";
+            HasClient_EAP [label="HasClient"];
+        }
+    }
     subgraph clusterMain {
         label = "Connecting Wireless-LAN Access Point";
         subgraph N_Start {
@@ -22,12 +73,14 @@ digraph Diagram {
                 node [shape=box];
                 ImproveYourWifiAntenna [URL="http://www.instructables.com/id/DIY-WIFI-Antenna-Reception-Booster/"];
                 DeauthAllClient [URL="http://www.aircrack-ng.org/doku.php?id=deauthentication"];
+                SpoofHardwareAddress [URL="http://www.securethelock.com/2013/12/03/how-to-bypass-mac-address-filtering-using-backtrackkali-linux/"]
             }
             subgraph N_If {
                 node [shape=diamond];
                 HasAccessPointsAroundYou [URL="http://www.aircrack-ng.org/doku.php?id=airodump-ng"];
                 IsStealthESSID [URL="http://securitysynapse.blogspot.jp/2014/01/wireless-pentesting-on-cheap-kali-hiddenSSID.html"];
                 IsThereConnectedClient [URL="http://blackhat6969.blogspot.jp/2012/09/down-and-dirty-wifi-cracking-with.html"];
+                HasHardwareAddressFiltering [URL="http://synjunkie.blogspot.jp/2007/12/bypass-hidden-ssid-mac-address-filter.html"];
                 HasEncryption [URL="http://www.dummies.com/how-to/content/wireless-security-protocols-wep-wpa-and-wpa2.html"];
                 HasWebAuthentication [URL="http://www.slideshare.net/support_cyberoam/hotspot-authentication"];
                 IsWEP [URL="http://www.howtogeek.com/167783/htg-explains-the-difference-between-wep-wpa-and-wpa2-wireless-encryption-and-why-it-matters/"];
@@ -37,14 +90,25 @@ digraph Diagram {
             Start -> HasAccessPointsAroundYou;
             {HasAccessPointsAroundYou ImproveYourWifiAntenna} -> IsStealthESSID [label="I have."];
             HasAccessPointsAroundYou -> ImproveYourWifiAntenna [label="Seems nothing."];
-            IsStealthESSID -> IsThereConnectedClient [label="I don't know ESSID"];
+            IsStealthESSID -> IsThereConnectedClient [label="I don't know ESSID."];
             IsThereConnectedClient -> DeauthAllClient [label="Yes. Someone connects."];
             IsThereConnectedClient -> IsThereConnectedClient [label="No."];
-            {IsStealthESSID DeauthAllClient } -> HasEncryption [label="I got ESSID from frames"];
-            HasEncryption -> HasWebAuthentication [label="No. It's OPN access."]
+            {IsStealthESSID DeauthAllClient } -> HasHardwareAddressFiltering [label="I got ESSID from frames."]
+            HasHardwareAddressFiltering -> SpoofHardwareAddress [label="Yes, I can't associate with AP."]
+            {HasHardwareAddressFiltering SpoofHardwareAddress} -> HasEncryption [label="I could associate with AP(or WEP-SKA)."]
+
+            HasEncryption -> NothingToDo [label="No. It's OPN access."]
+            //goto clusterOPN
+
             HasEncryption -> IsWEP [label="It has."];
-            IsWEP -> WEP [label="Yes. WEP."];
-            IsWEP -> WPA [label="No.WPA."];
+            IsWEP -> HasClient_WEP [label="Yes. WEP."];
+            //goto clusterWEP
+
+            IsWEP -> IsTKIP [label="No.WPA."];
+            //goto clusterWPA
+
+            //backfrom OPN/WEP/WPA
+            NothingToDo -> HasWebAuthentication;
         }
     }
     subgraph clusterCommands {
@@ -62,26 +126,6 @@ digraph Diagram {
             ImproveYourWifiAntennaCommand -> ImproveYourWifiAntenna;
             IsStealthESSIDCommand -> IsStealthESSID;
             DeauthAllClientCommand -> DeauthAllClient;
-        }
-    }
-    subgraph clusterWEP {
-        label = "WEP";
-        compound = true;
-        subgraph Nodes_WEP {
-            node [shape=box]
-            WEP;
-        }
-        subgraph Flow_WEP {
-        }
-    }
-    subgraph clusterWPA {
-        label = "WPA";
-        compound = true;
-        subgraph Nodes_WPA {
-            node [shape=box]
-            WPA;
-        }
-        subgraph Flow_WPA {
         }
     }
 }
