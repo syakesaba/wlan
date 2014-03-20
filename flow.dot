@@ -7,10 +7,14 @@ digraph Diagram {
     nodesep=0.1;
     node [fontsize=10];
     edge [fontsize=9];
+    subgraph clusterFail {
+        node [shape=doublecircle];
+        Impossible [label="BluteForceAttack? :D"];
+    }
     subgraph clusterOPN{
         label = "OPN";
         subgraph OPN_N_If {
-            node [shape=diamond]
+            node [shape=diamond];
             NothingToDo;
         }
         subgraph OPN_Flow {
@@ -19,7 +23,7 @@ digraph Diagram {
     subgraph clusterWEP {
         label = "WEP";
         subgraph WEP_N_If {
-            node [shape=diamond]
+            node [shape=diamond];
             HasClient_WEP [label="HasClient"];
         }
         subgraph WEP_Flow {
@@ -28,34 +32,57 @@ digraph Diagram {
     subgraph clusterWPA {
         label = "WPA";
         subgraph WPA_N_If {
-            node [shape=diamond]
+            node [shape=diamond];
             IsTKIP;
             IsPSK;
+            HasWPS_PSK [label="HasWPS",URL="http://code.google.com/p/reaver-wps/source/browse/trunk/docs/README.WASH?r=87"];
+            HasClient_EAP [label="HasClient"];
         }
         subgraph WPA_Flow {
-            IsTKIP -> HasAP_PSK [label="Yes."];
+            IsTKIP -> HasWPS_PSK [label="Yes."];
             IsTKIP -> IsPSK [label="No."];
             //IsTKIP -> KobeCrack [label="gain xor -> sniff and forge packets(do XOR each transaction)"]
-            IsPSK -> HasClient_PSK [label="Yes."];
+            IsPSK -> HasWPS_PSK [label="Yes."];
             IsPSK -> HasClient_EAP [label="NO."];
         }
         subgraph clusterPSK {
             label = "PSK";
             subgraph PSK_N_If {
+                node [shape=diamond];
                 HasClient_PSK [label="HasClient"];
-                HasAP_PSK [label="HasAP"];
-                HasAP_WPS_PSK [label="DoesAccessPointUseWPS"];
+                IsWeakWPS [URL="https://scotthelme.co.uk/wifi-insecurity-wps/"];
             }
-            subgraph PSK_N_Flow {
-                HasAP_PSK -> HasAP_WPS_PSK [label="Yes"];
-                //HasAP_PSK -> HasClient_PSK [label="Yes"];
-                //HasClient_PSK -> HasAP_PSK [label="Yes."];
-                //HasClient_PSK -> HasAP_PSK [label="No."]
+            subgraph PSK_N_Do {
+                node [shape=box];
+                SetupRougeAccessPointOrDeauthClient [shape=record,label="SetupRougeAP|DeauthClient"];
+                StealHandShake;
+                CrackWPS [URL="http://lifehacker.com/5873407/how-to-crack-a-wi-fi-networks-wpa-password-with-reaver"];
+            }
+            subgraph PSK_Flow {
+                HasWPS_PSK -> IsWeakWPS [label="Yes."];
+                IsWeakWPS -> CrackWPS [label="Yes."]
+                IsWeakWPS -> HasClient_PSK [label="No."]
+                HasWPS_PSK -> HasClient_PSK [label="No."];
+                HasClient_PSK -> SetupRougeAccessPointOrDeauthClient [label="Yes."];
+                HasClient_PSK -> Impossible [label="No."];
+                SetupRougeAccessPointOrDeauthClient -> StealHandShake;
             }
         }
         subgraph clusterEAP {
             label = "EAP";
-            HasClient_EAP [label="HasClient"];
+            subgraph EAP_N_If {
+                node [shape=diamond];
+            }
+            subgraph EAP_N_Do {
+                node [shape=box];
+                SetupRougeAP;
+                CaptureChallangeResponse;
+            }
+            subgraph EAP_Flow {
+                HasClient_EAP -> SetupRougeAP [label="Yes."];
+                HasClient_EAP -> Impossible [label="No."]
+                SetupRougeAP -> CaptureChallangeResponse;
+            }
         }
     }
     subgraph clusterMain {
@@ -87,28 +114,32 @@ digraph Diagram {
             }
         }
         subgraph Flow {
-            Start -> HasAccessPointsAroundYou;
-            {HasAccessPointsAroundYou ImproveYourWifiAntenna} -> IsStealthESSID [label="I have."];
-            HasAccessPointsAroundYou -> ImproveYourWifiAntenna [label="Seems nothing."];
-            IsStealthESSID -> IsThereConnectedClient [label="I don't know ESSID."];
-            IsThereConnectedClient -> DeauthAllClient [label="Yes. Someone connects."];
+            Start -> HasAccessPointsAroundYou [label="Fine."];
+            HasAccessPointsAroundYou -> IsStealthESSID [label="Yes"]
+            HasAccessPointsAroundYou -> ImproveYourWifiAntenna [label="No."];
+            ImproveYourWifiAntenna -> IsStealthESSID [label="OK I got it."];
+            IsStealthESSID -> IsThereConnectedClient [label="Yes."];
+            IsThereConnectedClient -> DeauthAllClient [label="Yes."];
             IsThereConnectedClient -> IsThereConnectedClient [label="No."];
-            {IsStealthESSID DeauthAllClient } -> HasHardwareAddressFiltering [label="I got ESSID from frames."]
-            HasHardwareAddressFiltering -> SpoofHardwareAddress [label="Yes, I can't associate with AP."]
-            {HasHardwareAddressFiltering SpoofHardwareAddress} -> HasEncryption [label="I could associate with AP(or WEP-SKA)."]
-
-            HasEncryption -> NothingToDo [label="No. It's OPN access."]
+            IsStealthESSID -> HasHardwareAddressFiltering [label="No."];
+            DeauthAllClient -> HasHardwareAddressFiltering [label="I got ESSID."]
+            HasHardwareAddressFiltering -> SpoofHardwareAddress [label="Yes."]
+            HasHardwareAddressFiltering -> HasEncryption [label="No."];
+            SpoofHardwareAddress -> HasEncryption [label="I could associate with AP(or WEP-SKA."]
+            HasEncryption -> NothingToDo [label="No."]
             //goto clusterOPN
 
-            HasEncryption -> IsWEP [label="It has."];
-            IsWEP -> HasClient_WEP [label="Yes. WEP."];
+            HasEncryption -> IsWEP [label="Yes."];
+            IsWEP -> HasClient_WEP [label="Yes."];
             //goto clusterWEP
 
-            IsWEP -> IsTKIP [label="No.WPA."];
+            IsWEP -> IsTKIP [label="No."];
             //goto clusterWPA
 
-            //backfrom OPN/WEP/WPA
-            NothingToDo -> HasWebAuthentication;
+            //back from OPN
+            NothingToDo -> HasWebAuthentication [label=""];
+            //back from WPA
+            CrackWPS -> HasWebAuthentication [label=""];
         }
     }
     subgraph clusterCommands {
@@ -119,6 +150,7 @@ digraph Diagram {
             ImproveYourWifiAntennaCommand [label="iw reg set BO;\niwconfig wlan0 tx 30;\n#Add DIY Parabora."];
             IsStealthESSIDCommand [label="airodump-ng -c [channel] --bssid [AP MAC] wlan0"]
             DeauthAllClientCommand [label="aireplay-ng -0 0 -a [AP MAC] wlan0;\naireplay-ng -0 0 -a [AP MAC] -c [STA MAC] wlan0;"];
+            SpoofHardwareAddressCommand [label="ifconfig wlan0 down && ifconfig hw ether [MAC] && ifconfig wlan0 up;\nmacchanger -m [MAC] wlan0;"]
         }
         subgraph Nt_Flow {
             edge [color=gray];
@@ -126,32 +158,15 @@ digraph Diagram {
             ImproveYourWifiAntennaCommand -> ImproveYourWifiAntenna;
             IsStealthESSIDCommand -> IsStealthESSID;
             DeauthAllClientCommand -> DeauthAllClient;
+            SpoofHardwareAddressCommand -> SpoofHardwareAddress;
         }
     }
 }
-        //subgraph clusterFlow {
-        /*
-        subgraph Flow {
-            IcapRequest -> IsREQMOD [label="ICAP Request From Proxy"];
-            {IsREQMOD -> IsRESPMOD [label="no"]} -> IsHTTP [label="yes"];
-
-            IsHTTP -> IsHTTPResponse [label="yes"];
-
-            IsHTTPResponse -> IsHTTPRequest [label="no"];
-            IsHTTPResponse -> HasCanariaCookie [label="yes"];
-            HasCanariaCookie -> SetCanariaCookie [label="no"];
-            HasCanariaCookie -> 204 [label="yes"];
-            SetCanariaCookie -> 200 [label="mod please"];
-
-            IsHTTPRequest -> CheckURL_ModSecurity_Canaria [label="yes"];
-            {CheckURL_ModSecurity_Canaria -> CheckBody_ModSecurity_Canaria [label="OK"]} -> 403 [label="XSS!"];
-            CheckBody_ModSecurity_Canaria -> 204 [label="OK"];
-
-            {IsRESPMOD IsHTTP IsHTTPRequest} -> 204 [label="Exception"];//OPTIONS, etc..
-            {rank=same; 200 204 403} -> IcapResponse [label="ICAP Response to Proxy"];//同じ階層に
-        }
-        //{edge[style=invis];
-            //{IcapRequest} -> {IcapResponse};
-        //}
-        */
+/*
+MEMO:
+{rank=same; 200 204 403} -> Test
+//{edge[style=invis];
+    //{Test} -> {Test};
+//}
+*/
 
