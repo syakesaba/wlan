@@ -94,6 +94,9 @@ digraph Diagram {
         subgraph N_End {
             node [shape=triangle];
             End;
+            subgraph Impossible_to_End{
+                Impossible -> End;
+            }
         }
         subgraph Nodes {
             subgraph N_Do {
@@ -101,6 +104,7 @@ digraph Diagram {
                 ImproveYourWifiAntenna [URL="http://www.instructables.com/id/DIY-WIFI-Antenna-Reception-Booster/"];
                 DeauthAllClient [URL="http://www.aircrack-ng.org/doku.php?id=deauthentication"];
                 SpoofHardwareAddress [URL="http://www.securethelock.com/2013/12/03/how-to-bypass-mac-address-filtering-using-backtrackkali-linux/"]
+                SpoofHardwareAddress2 [label="SpoofHardwareAddressToClient'sOne",URL="http://www.securethelock.com/2013/12/03/how-to-bypass-mac-address-filtering-using-backtrackkali-linux/"]
             }
             subgraph N_If {
                 node [shape=diamond];
@@ -109,8 +113,10 @@ digraph Diagram {
                 IsThereConnectedClient [URL="http://blackhat6969.blogspot.jp/2012/09/down-and-dirty-wifi-cracking-with.html"];
                 HasHardwareAddressFiltering [URL="http://synjunkie.blogspot.jp/2007/12/bypass-hidden-ssid-mac-address-filter.html"];
                 HasEncryption [URL="http://www.dummies.com/how-to/content/wireless-security-protocols-wep-wpa-and-wpa2.html"];
-                HasWebAuthentication [URL="http://www.slideshare.net/support_cyberoam/hotspot-authentication"];
                 IsWEP [URL="http://www.howtogeek.com/167783/htg-explains-the-difference-between-wep-wpa-and-wpa2-wireless-encryption-and-why-it-matters/"];
+                HasWebAuthentication [URL="http://www.slideshare.net/support_cyberoam/hotspot-authentication"];
+                HasAccount;
+                HasClient_Web [label="HasAlreadyAuthenticatedClient"];
             }
         }
         subgraph Flow {
@@ -140,6 +146,13 @@ digraph Diagram {
             NothingToDo -> HasWebAuthentication [label=""];
             //back from WPA
             CrackWPS -> HasWebAuthentication [label=""];
+            //back from WEP
+
+
+            HasWebAuthentication -> HasAccount [label="Yes."];
+            HasWebAuthentication -> HasClient_Web [label="No."]
+            HasClient_Web -> SpoofHardwareAddress2 [label="Yes."];
+            HasClient_Web -> Impossible [label="No."];
         }
     }
     subgraph clusterCommands {
@@ -161,12 +174,10 @@ digraph Diagram {
             SpoofHardwareAddressCommand -> SpoofHardwareAddress;
         }
     }
-}
-/*
-MEMO:
-{rank=same; 200 204 403} -> Test
-//{edge[style=invis];
-    //{Test} -> {Test};
-//}
-*/
 
+    {
+        edge[style=invis];
+        {End} -> {Impossible};
+    }
+    //{rank=same; End Impossible};
+}
