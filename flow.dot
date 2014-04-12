@@ -93,6 +93,7 @@ digraph Diagram {
                     HasClient_PSK -> Impossible [label="No."];
                     SetupRougeAccessPointOrDeauthClient -> StealHandShake;
                     StealHandShake -> CrackCredential_PSK;
+                    CrackWPS -> CrackCredential_PSK;
                 }
             }
             subgraph clusterEAP {
@@ -172,7 +173,6 @@ digraph Diagram {
             //back from OPN
             NothingToDo -> HasWebAuthentication;
             //back from WPA
-            CrackWPS -> HasWebAuthentication;
             CrackCredential_PSK -> HasWebAuthentication;
             CrackCredential_EAP -> HasWebAuthentication;
             //back from WEP
