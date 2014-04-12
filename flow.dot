@@ -23,7 +23,7 @@ digraph Diagram {
             label = "OPN";
             subgraph OPN_N_If {
                 node [shape=diamond];
-                NothingToDo;
+                NothingToDo [URL="http://compnetworking.about.com/od/wirelessfaqs/f/legal_free_wifi.htm"];
             }
             subgraph OPN_Flow {
             }
@@ -32,9 +32,9 @@ digraph Diagram {
             label = "WEP";
             subgraph WEP_N_Do {
                 node [shape=box];
-                ARPReplay [label="Perform ARP replay Attack"];
-                CaptureSomeDataPacket [label="Capture #Data Packet"];
-                ForgeARP [label="Forge ARP Packet"];
+                ARPReplay [label="Perform ARP replay Attack",URL="http://www.aircrack-ng.org/doku.php?id=arp-request_reinjection"];
+                CaptureSomeDataPacket [label="Capture #Data Packet",URL="http://www.aircrack-ng.org/doku.php?id=how_to_crack_wep_with_no_clients"];
+                ForgeARP [label="Forge ARP Packet",URL="http://www.aircrack-ng.org/doku.php?id=packetforge-ng"];
                 BluteforceCRC [label="BluteForce Against a WEP Data Packet"];
                 CrackCredential_WEP [label="CrackCredential"];
             }
