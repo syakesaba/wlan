@@ -7,86 +7,113 @@ digraph Diagram {
     nodesep=0.1;
     node [fontsize=10];
     edge [fontsize=9];
-    subgraph clusterFail {
-        node [shape=doublecircle];
-        Impossible [label="BluteForceAttack? :D"];
+    /*
+    {
+        node [style="invis"];
+        MAIN1 -> OPN2 -> WEP3 -> WPA4 [allowhead="none",style="invis"];
     }
-    subgraph clusterOPN{
-        label = "OPN";
-        subgraph OPN_N_If {
-            node [shape=diamond];
-            NothingToDo;
-        }
-        subgraph OPN_Flow {
-        }
-    }
-    subgraph clusterWEP {
-        label = "WEP";
-        subgraph WEP_N_If {
-            node [shape=diamond];
-            HasClient_WEP [label="HasClient"];
-        }
-        subgraph WEP_Flow {
-        }
-    }
-    subgraph clusterWPA {
-        label = "WPA";
-        subgraph WPA_N_If {
-            node [shape=diamond];
-            IsTKIP;
-            IsPSK;
-            HasWPS_PSK [label="HasWPS",URL="http://code.google.com/p/reaver-wps/source/browse/trunk/docs/README.WASH?r=87"];
-            HasClient_EAP [label="HasClient"];
-        }
-        subgraph WPA_Flow {
-            IsTKIP -> HasWPS_PSK [label="Yes."];
-            IsTKIP -> IsPSK [label="No."];
-            //IsTKIP -> KobeCrack [label="gain xor -> sniff and forge packets(do XOR each transaction)"]
-            IsPSK -> HasWPS_PSK [label="Yes."];
-            IsPSK -> HasClient_EAP [label="NO."];
-        }
-        subgraph clusterPSK {
-            label = "PSK";
-            subgraph PSK_N_If {
-                node [shape=diamond];
-                HasClient_PSK [label="HasClient"];
-                IsWeakWPS [URL="https://scotthelme.co.uk/wifi-insecurity-wps/"];
-            }
-            subgraph PSK_N_Do {
-                node [shape=box];
-                SetupRougeAccessPointOrDeauthClient [shape=record,label="SetupRougeAP|DeauthClient"];
-                StealHandShake;
-                CrackWPS [URL="http://lifehacker.com/5873407/how-to-crack-a-wi-fi-networks-wpa-password-with-reaver"];
-            }
-            subgraph PSK_Flow {
-                HasWPS_PSK -> IsWeakWPS [label="Yes."];
-                IsWeakWPS -> CrackWPS [label="Yes."]
-                IsWeakWPS -> HasClient_PSK [label="No."]
-                HasWPS_PSK -> HasClient_PSK [label="No."];
-                HasClient_PSK -> SetupRougeAccessPointOrDeauthClient [label="Yes."];
-                HasClient_PSK -> Impossible [label="No."];
-                SetupRougeAccessPointOrDeauthClient -> StealHandShake;
-            }
-        }
-        subgraph clusterEAP {
-            label = "EAP";
-            subgraph EAP_N_If {
-                node [shape=diamond];
-            }
-            subgraph EAP_N_Do {
-                node [shape=box];
-                SetupRougeAP;
-                CaptureChallangeResponse;
-            }
-            subgraph EAP_Flow {
-                HasClient_EAP -> SetupRougeAP [label="Yes."];
-                HasClient_EAP -> Impossible [label="No."]
-                SetupRougeAP -> CaptureChallangeResponse;
-            }
-        }
-    }
+    */
     subgraph clusterMain {
         label = "Connecting Wireless-LAN Access Point";
+        subgraph clusterFail {
+            node [shape=doublecircle];
+            Impossible [label="BluteForceAttack? :D"];
+        }
+        subgraph clusterOPN{
+            label = "OPN";
+            subgraph OPN_N_If {
+                node [shape=diamond];
+                NothingToDo;
+            }
+            subgraph OPN_Flow {
+            }
+        }
+        subgraph clusterWEP {
+            label = "WEP";
+            subgraph WEP_N_Do {
+                node [shape=box];
+                ARPReplay [label="Perform ARP replay Attack"];
+                CaptureSomeDataPacket [label="Capture #Data Packet"];
+                ForgeARP [label="Forge ARP Packet"];
+                BluteforceCRC [label="BluteForce Against a WEP Data Packet"];
+                CrackCredential_WEP [label="CrackCredential"];
+            }
+            subgraph WEP_N_If {
+                node [shape=diamond];
+                HasClient_WEP [label="HasClient"];
+                CouldGenerateXOR;
+            }
+            subgraph WEP_Flow {
+                HasClient_WEP -> ARPReplay [label="Yes."];
+                HasClient_WEP -> CaptureSomeDataPacket [label="No."];
+                CaptureSomeDataPacket -> CouldGenerateXOR;
+                CouldGenerateXOR -> ForgeARP [label="Yes."];
+                CouldGenerateXOR -> BluteforceCRC [label="No."];
+                BluteforceCRC -> CrackCredential_WEP;
+                ForgeARP -> ARPReplay;
+                ARPReplay -> CrackCredential_WEP;
+            }
+        }
+        subgraph clusterWPA {
+            label = "WPA";
+            subgraph WPA_N_If {
+                node [shape=diamond];
+                IsTKIP;
+                IsPSK;
+                HasWPS_PSK [label="HasWPS",URL="http://code.google.com/p/reaver-wps/source/browse/trunk/docs/README.WASH?r=87"];
+                HasClient_EAP [label="HasClient"];
+            }
+            subgraph WPA_Flow {
+                IsTKIP -> HasWPS_PSK [label="Yes."];
+                IsTKIP -> IsPSK [label="No."];
+                //IsTKIP -> KobeCrack [label="gain xor -> sniff and forge packets(do XOR each transaction)"]
+                IsPSK -> HasWPS_PSK [label="Yes."];
+                IsPSK -> HasClient_EAP [label="NO."];
+            }
+            subgraph clusterPSK {
+                label = "PSK";
+                subgraph PSK_N_If {
+                    node [shape=diamond];
+                    HasClient_PSK [label="HasClient"];
+                    IsWeakWPS [URL="https://scotthelme.co.uk/wifi-insecurity-wps/"];
+                }
+                subgraph PSK_N_Do {
+                    node [shape=box];
+                    SetupRougeAccessPointOrDeauthClient [shape=record,label="SetupRougeAP|DeauthClient"];
+                    StealHandShake;
+                    CrackCredential_PSK [label="CrackCredential"];
+                    CrackWPS [URL="http://lifehacker.com/5873407/how-to-crack-a-wi-fi-networks-wpa-password-with-reaver"];
+                }
+                subgraph PSK_Flow {
+                    HasWPS_PSK -> IsWeakWPS [label="Yes."];
+                    IsWeakWPS -> CrackWPS [label="Yes."]
+                    IsWeakWPS -> HasClient_PSK [label="No."]
+                    HasWPS_PSK -> HasClient_PSK [label="No."];
+                    HasClient_PSK -> SetupRougeAccessPointOrDeauthClient [label="Yes."];
+                    HasClient_PSK -> Impossible [label="No."];
+                    SetupRougeAccessPointOrDeauthClient -> StealHandShake;
+                    StealHandShake -> CrackCredential_PSK;
+                }
+            }
+            subgraph clusterEAP {
+                label = "EAP";
+                subgraph EAP_N_If {
+                    node [shape=diamond];
+                }
+                subgraph EAP_N_Do {
+                    node [shape=box];
+                    SetupRougeAP;
+                    CaptureChallangeResponse;
+                    CrackCredential_EAP [label="CrackCredential"];
+                }
+                subgraph EAP_Flow {
+                    HasClient_EAP -> SetupRougeAP [label="Yes."];
+                    HasClient_EAP -> Impossible [label="No."]
+                    SetupRougeAP -> CaptureChallangeResponse;
+                    CaptureChallangeResponse -> CrackCredential_EAP;
+                }
+            }
+        }
         subgraph N_Start {
             node [shape=invtriangle];
             Start;
@@ -143,19 +170,25 @@ digraph Diagram {
             //goto clusterWPA
 
             //back from OPN
-            NothingToDo -> HasWebAuthentication [label=""];
+            NothingToDo -> HasWebAuthentication;
             //back from WPA
-            CrackWPS -> HasWebAuthentication [label=""];
+            CrackWPS -> HasWebAuthentication;
+            CrackCredential_PSK -> HasWebAuthentication;
+            CrackCredential_EAP -> HasWebAuthentication;
             //back from WEP
-
+            CrackCredential_WEP -> HasWebAuthentication;
 
             HasWebAuthentication -> HasAccount [label="Yes."];
             HasWebAuthentication -> HasClient_Web [label="No."]
             HasClient_Web -> SpoofHardwareAddress2 [label="Yes."];
             HasClient_Web -> Impossible [label="No."];
+
+            HasAccount -> End;
+            SpoofHardwareAddress2 -> End;
         }
     }
-    subgraph clusterCommands {
+    //subgraph clusterCommands {
+    subgraph Commands {
         label = "CommandsAndNotes";
         subgraph Nt_Command {
             node [shape=box];
@@ -174,10 +207,16 @@ digraph Diagram {
             SpoofHardwareAddressCommand -> SpoofHardwareAddress;
         }
     }
-
+/*
     {
         edge[style=invis];
         {End} -> {Impossible};
     }
-    //{rank=same; End Impossible};
+*/
+    /*
+    {rank=same; MAIN1; Start ;};
+    {rank=same; OPN2; NothingToDo ;};
+    {rank=same; WEP3; HasClient_WEP ;};
+    {rank=same; WPA4; IsPSK ;};
+    */
 }
