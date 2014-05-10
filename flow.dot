@@ -141,6 +141,7 @@ digraph Diagram {
                 DeauthAllClient [URL="http://www.aircrack-ng.org/doku.php?id=deauthentication"];
                 SpoofHardwareAddress [URL="http://www.securethelock.com/2013/12/03/how-to-bypass-mac-address-filtering-using-backtrackkali-linux/"];
                 SpoofHardwareAddress2 [label="SpoofHardwareAddressToClient'sOne",URL="http://www.securethelock.com/2013/12/03/how-to-bypass-mac-address-filtering-using-backtrackkali-linux/"];
+                SpoofProtocol [label="TCP over ICMP\nTCP over DNS\n"];
             }
             subgraph N_If {
                 node [shape=diamond];
@@ -152,6 +153,7 @@ digraph Diagram {
                 IsWEP [URL="http://www.howtogeek.com/167783/htg-explains-the-difference-between-wep-wpa-and-wpa2-wireless-encryption-and-why-it-matters/"];
                 HasWebAuthentication [URL="http://www.slideshare.net/support_cyberoam/hotspot-authentication"];
                 HasAccount;
+                HasPermitedProtocols;
                 HasClient_Web [label="HasAlreadyAuthenticatedClient"];
             }
         }
@@ -191,7 +193,9 @@ digraph Diagram {
             HasAccount -> End [label="Yes."];
             HasAccount -> HasClient_Web [label="No."];
             HasClient_Web -> SpoofHardwareAddress2 [label="Yes."];
-            HasClient_Web -> Impossible [label="No."];
+            HasClient_Web -> HasPermitedProtocols [label="No."];
+            HasPermitedProtocols -> SpoofProtocol [label="Yes."];
+            HasPermitedProtocols -> Impossible [label="No."];
             SpoofHardwareAddress2 -> End;
         }
     }
