@@ -67,13 +67,20 @@ digraph Diagram {
                 IsPSK;
                 HasWPS_PSK [label="HasWPS",URL="http://code.google.com/p/reaver-wps/source/browse/trunk/docs/README.WASH?r=87"];
                 HasClient_EAP [label="HasClient"];
+                HasIEEE80211r [label="HasIEEE802.11r"];
             }
             subgraph WPA_Flow {
                 IsTKIP -> HasWPS_PSK [label="Yes."];
                 IsTKIP -> IsPSK [label="No."];
                 //IsTKIP -> KobeCrack [label="gain xgr -> sniff and forge packets(do XOR each transaction)"];
                 IsPSK -> HasWPS_PSK [label="Yes."];
-                IsPSK -> HasClient_EAP [label="NO."];
+                IsPSK -> HasClient_EAP [label="No."];
+                HasIEEE80211r -> KRACKs [label="Yes."];
+                HasIEEE80211r -> Impossible [label="No."];
+            }
+            subgraph WPA_N_Do {
+                node [shape=box];
+                KRACKs [URL="https://github.com/petermbenjamin/krackattacks-test-ap-ft#suggested-solution"];
             }
             subgraph clusterPSK {
                 label = "PSK";
@@ -95,7 +102,7 @@ digraph Diagram {
                     IsWeakWPS -> HasClient_PSK [label="No."];
                     HasWPS_PSK -> HasClient_PSK [label="No."];
                     HasClient_PSK -> SetupRougeAccessPointOrDeauthClient [label="Yes."];
-                    HasClient_PSK -> Impossible [label="No."];
+                    HasClient_PSK -> HasIEEE80211r [label="No."];
                     SetupRougeAccessPointOrDeauthClient -> StealHandShake;
                     StealHandShake -> CrackCredential_PSK;
                     CrackWPS -> CrackCredential_PSK;
@@ -114,7 +121,7 @@ digraph Diagram {
                 }
                 subgraph EAP_Flow {
                     HasClient_EAP -> SetupRougeAP [label="Yes."];
-                    HasClient_EAP -> Impossible [label="No."];
+                    HasClient_EAP -> HasIEEE80211r [label="No."];
                     SetupRougeAP -> CaptureChallangeResponse;
                     CaptureChallangeResponse -> CrackCredential_EAP;
                 }
@@ -247,3 +254,4 @@ digraph Diagram {
     {rank=same; WPA4; IsPSK ;};
     */
 }
+
